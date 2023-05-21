@@ -1,0 +1,18 @@
+{
+    "facility_path": "data/Facility2Constellation/",
+    "satellite_path": "data/Russia2Constellation/",
+    "satellites": [
+        {
+            "name": "KinoSat",
+            "filling_speed": 4096,
+            "freeing_speed": 1024,
+            "space": 1048576
+        },
+        {
+            "name": "Zorkiy",
+            "filling_speed": 4096,
+            "freeing_speed": 256,
+            "space": 524288
+        }
+    ]
+}
