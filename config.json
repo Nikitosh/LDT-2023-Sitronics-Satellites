@@ -1,6 +1,7 @@
 {
     "facility_path": "data/Facility2Constellation/",
     "satellite_path": "data/Russia2Constellation/",
+    "schedule_path": "data/schedule/",
     "satellites": [
         {
             "name": "KinoSat",
