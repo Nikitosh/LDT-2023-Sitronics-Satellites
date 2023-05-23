@@ -1,3 +1,4 @@
 data/schedule/
 solution
 solution.dSYM/
+*.DS_Store
