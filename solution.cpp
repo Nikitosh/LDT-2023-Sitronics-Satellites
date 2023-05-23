@@ -137,12 +137,12 @@ struct Segment {
 };
 
 struct SatelliteType {
-    string name;
+    string name_regex;
     int filling_speed = 0;
     int freeing_speed = 0;
     int space = 0;
-    SatelliteType(const string& _name, int _filling_speed, int _freeing_speed, int _space): 
-        name(_name), filling_speed(_filling_speed), freeing_speed(_freeing_speed), space(_space) {}
+    SatelliteType(const string& _name_regex, int _filling_speed, int _freeing_speed, int _space): 
+        name_regex(_name_regex), filling_speed(_filling_speed), freeing_speed(_freeing_speed), space(_space) {}
 };
 
 struct Reader {
@@ -194,7 +194,7 @@ struct Reader {
     static map<string, vector<Segment>> ReadSatelliteVisibility(const string& directory) {
         map<string, vector<Segment>> result;
         for (const auto& file : fs::directory_iterator(directory)) {
-            if (!StartsWith(file.path().stem(), "AreaTarget")) {
+            if (!StartsWith(file.path().stem(), "Russia")) {
                 continue;
             }
             auto [facility, satellites] = ReadFile(file.path());
@@ -242,7 +242,7 @@ int main() {
     json config = Reader::ReadConfig("config.json");
     vector<SatelliteType> satellites_config;
     for (auto& satellite : config["satellites"]) {
-        satellites_config.push_back(SatelliteType(satellite["name"], satellite["filling_speed"],
+        satellites_config.push_back(SatelliteType(satellite["name_regex"], satellite["filling_speed"],
             satellite["freeing_speed"], satellite["space"]));
     }
 
@@ -257,7 +257,7 @@ int main() {
         satellite_names.push_back(name);
         satellite_names_map[name] = satellites++;
         for (const auto& satellite_type : satellites_config) {
-            if (StartsWith(name, satellite_type.name)) {
+            if (regex_match(name, regex(satellite_type.name_regex))) {
                 satellite_types.push_back(satellite_type);
             }
         }
