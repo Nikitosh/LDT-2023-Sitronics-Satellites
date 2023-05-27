@@ -135,12 +135,19 @@ const vector<int> Date::PARTIAL_YEAR_DAYS = createPartialYearDays();
 struct Segment {
     long long l;
     long long r;
+    Segment(): l(0), r(0) {}
     Segment(long long _l, long long _r): l(_l), r(_r) {}
+    Segment Intersect(const Segment& other) const {
+        return Segment(max(l, other.l), min(r, other.r));
+    }
     bool Intersects(const Segment& other) const {
         return max(l, other.l) < min(r, other.r);
     }
     long long GetIntersectionLength(const Segment& other) const {
         return max(0ll, min(r, other.r) - max(l, other.l));
+    }
+    long long Length() const {
+        return max(0ll, r - l);
     }
 };
 
@@ -148,11 +155,11 @@ struct SatelliteType {
     int type;
     string name;
     string name_regex;
-    int filling_speed = 0;
-    int freeing_speed = 0;
-    int space = 0;
+    long long filling_speed = 0;
+    long long freeing_speed = 0;
+    long long space = 0;
     SatelliteType(int _type, const string& _name, const string& _name_regex, 
-        int _filling_speed, int _freeing_speed, int _space): 
+        long long _filling_speed, long long _freeing_speed, long long _space): 
         type(_type), name(_name), name_regex(_name_regex), 
         filling_speed(_filling_speed), freeing_speed(_freeing_speed), space(_space) {}
 };
@@ -225,37 +232,58 @@ struct Reader {
 struct Writer {
     static void WriteSchedule(const string& directory, 
         const vector<vector<vector<Segment>>>& transmission_segments, 
+        const vector<vector<Segment>>& shooting_segments, 
         const vector<string>& facility_names, 
         const vector<string>& satellite_names, 
         const vector<SatelliteType> satellite_types) {
-            fs::create_directory(directory);
-            for (int i = 0; i < (int) transmission_segments.size(); i++) {
-                ofstream file(directory + "Facility-" + facility_names[i] + ".txt");
-                for (int j = 0; j < (int) transmission_segments[i].size(); j++) {
-                    file << facility_names[i] << "-To-" << satellite_names[j] << "\n";
-                    file << string(facility_names[i].size() + satellite_names[j].size() + 4, '-') << "\n";
-                    file << "Access        Start Time (UTCG)           Stop Time (UTCG)        Duration (sec)    Satellite name    Data (Mbytes)\n";
-                    file << "------    ------------------------    ------------------------    --------------    --------------    -------------\n";
-                    for (int g = 0; g < (int) transmission_segments[i][j].size(); g++) {
-                        const auto& segment = transmission_segments[i][j][g];
-                        long long duration = segment.r - segment.l;
-                        file << ToStringWithLength(to_string(g + 1), 6) << "    " 
-                            << ToStringWithLength(Date::FromTimestamp(segment.l).ToString(), 24) << "    " 
-                            << ToStringWithLength(Date::FromTimestamp(segment.r).ToString(), 24) << "    " 
-                            << ToStringWithLength(to_string(duration / 1000) +  "." 
-                            + ToStringWithLength(duration % 1000, 3), 14) << "    " 
-                            << ToStringWithLength(satellite_names[j], 14) << "    "
-                            << ToStringWithLength(to_string(duration * satellite_types[j].freeing_speed / 1000), 13) << "\n";
-                    }
-                    file << "\n";
+        fs::create_directory(directory);
+        for (int i = 0; i < (int) transmission_segments.size(); i++) {
+            ofstream file(directory + "Facility-" + facility_names[i] + ".txt");
+            for (int j = 0; j < (int) transmission_segments[i].size(); j++) {
+                file << facility_names[i] << "-To-" << satellite_names[j] << "\n";
+                file << string(facility_names[i].size() + satellite_names[j].size() + 4, '-') << "\n";
+                file << "Access        Start Time (UTCG)           Stop Time (UTCG)        Duration (sec)    Satellite name    Data (Mbytes)\n";
+                file << "------    ------------------------    ------------------------    --------------    --------------    -------------\n";
+                for (int g = 0; g < (int) transmission_segments[i][j].size(); g++) {
+                    const auto& segment = transmission_segments[i][j][g];
+                    long long duration = segment.r - segment.l;
+                    file << ToStringWithLength(to_string(g + 1), 6) << "    " 
+                        << ToStringWithLength(Date::FromTimestamp(segment.l).ToString(), 24) << "    " 
+                        << ToStringWithLength(Date::FromTimestamp(segment.r).ToString(), 24) << "    " 
+                        << ToStringWithLength(to_string(duration / 1000) +  "." 
+                        + ToStringWithLength(duration % 1000, 3), 14) << "    " 
+                        << ToStringWithLength(satellite_names[j], 14) << "    "
+                        << ToStringWithLength(to_string(duration * satellite_types[j].freeing_speed / 1000), 13) << "\n";
                 }
+                file << "\n";
             }
+        }
+        ofstream file(directory + "Russia-To-Satellite.txt");
+        for (int i = 0; i < (int) shooting_segments.size(); i++) {
+            file << "Russia-To-" << satellite_names[i] << "\n";
+            file << string(satellite_names[i].size() + 10, '-') << "\n";
+            file << "Access        Start Time (UTCG)           Stop Time (UTCG)        Duration (sec)\n";
+            file << "------    ------------------------    ------------------------    --------------\n";
+            for (int j = 0; j < (int) shooting_segments[i].size(); j++) {
+                const auto& segment = shooting_segments[i][j];
+                long long duration = segment.r - segment.l;
+                file << ToStringWithLength(to_string(j + 1), 6) << "    " 
+                    << ToStringWithLength(Date::FromTimestamp(segment.l).ToString(), 24) << "    " 
+                    << ToStringWithLength(Date::FromTimestamp(segment.r).ToString(), 24) << "    " 
+                    << ToStringWithLength(to_string(duration / 1000) +  "." 
+                    + ToStringWithLength(duration % 1000, 3), 14)<< "\n";
+            }
+            file << "\n";
+        }
     }
 };
 
 struct TransmissionResult {
-    vector<vector<vector<Segment>>> segments;
-    long long total_data;
+    vector<vector<vector<Segment>>> transmission_segments;
+    vector<vector<Segment>> shooting_segments;
+    long long total_data = 0;
+    TransmissionResult(int facilities, int satellites): 
+        transmission_segments(facilities, vector<vector<Segment>>(satellites)), shooting_segments(satellites) {}
 };
 
 class Solver {
@@ -323,25 +351,26 @@ public:
             }
         }
 
+        int facilities = (int) facility_visibility.size();
         int satellites = (int) satellite_types.size();
         vector<int> perm(satellites);
         iota(perm.begin(), perm.end(), 0);
         sort(perm.begin(), perm.end(), [&](int i, int j) { 
             return satellite_types[i].freeing_speed > satellite_types[j].freeing_speed; });
-        long long total_data = 0;
+        TransmissionResult result(facilities, satellites);
         for (int i = 0; i < satellites; i++) {
             int ind = perm[i];
             double tranmission_time = (satellite_data[ind] * 1000. / satellite_types[ind].freeing_speed);
             if (tranmission_time <= total_station_time) {
                 total_station_time -= tranmission_time;
-                total_data += satellite_data[ind];
+                result.total_data += satellite_data[ind];
             } else {
-                total_data += total_station_time * satellite_types[ind].freeing_speed / 1000;
+                result.total_data += total_station_time * satellite_types[ind].freeing_speed / 1000;
                 break;
             }
         }
 
-        return TransmissionResult { .total_data = total_data };
+        return result;
     }
 };
 
@@ -372,24 +401,32 @@ public:
         vector<vector<int>> facility_iterators(facilities, vector<int>(satellites));
         vector<int> satellite_iterators(satellites);
 
-        auto get_satellite_intersection_length = [&satellite_visibility, &satellite_iterators](int i, const Segment& segment) {
+        auto get_satellite_intersection = [&satellite_visibility, &satellite_iterators](int i, const Segment& segment) {
             if (satellite_iterators[i] == (int) satellite_visibility[i].size()) {
-                return 0ll;
+                return Segment(0, 0);
             }
-            return satellite_visibility[i][satellite_iterators[i]].GetIntersectionLength(segment);
+            return satellite_visibility[i][satellite_iterators[i]].Intersect(segment);
         };
 
-        auto get_facility_intersection_length = [&facility_visibility, &facility_iterators](int i, int j, const Segment& segment) {
+        auto get_facility_intersection = [&facility_visibility, &facility_iterators](int i, int j, const Segment& segment) {
             if (facility_iterators[i][j] == (int) facility_visibility[i][j].size()) {
-                return 0ll;
+                return Segment(0, 0);
             }
-            return facility_visibility[i][j][facility_iterators[i][j]].GetIntersectionLength(segment);
+            return facility_visibility[i][j][facility_iterators[i][j]].Intersect(segment);
+        };
+
+        auto insert_segment = [](vector<Segment>& segments, const Segment& segment) {
+            if (!segments.empty() && segments.back().r == segment.l) {
+                segments.back().r = segment.r;
+            } else {
+                segments.push_back(segment);
+            }
         };
 
         vector<long long> space_used(satellites);
         vector<vector<int>> g(satellites);
-        long long total_data = 0;
         vector<long long> satellite_data(satellites);
+        TransmissionResult result(facilities, satellites);
         for (long long t = min_timestamp; t < max_timestamp; t += FRAGMENT_LENGTH) {
             if (t % 10000000 == 0) {
                 cerr << "Progress: " << round(100 * (t - min_timestamp) * 1. / (max_timestamp - min_timestamp)) << "%\n";
@@ -421,7 +458,7 @@ public:
                     }
                     if (facility_iterators[i][j] < (int) segments.size() 
                         && segments[facility_iterators[i][j]].Intersects(current)) {
-                        if (get_satellite_intersection_length(i, current) == 0
+                        if (get_satellite_intersection(i, current).Length() == 0
                             || 1.26 * space_used[j] >= satellite_types[j].space) {
                             g[j].push_back(satellites + i);
                         }
@@ -441,20 +478,27 @@ public:
             for (int i = 0; i < satellites; i++) {
                 if (paired[i] != -1) {
                     int f = paired[i] - satellites;
-                    int freed_space = min(space_used[i], satellite_types[i].freeing_speed * 
-                        get_facility_intersection_length(f, i, current) / 1000);
+                    Segment intersection = get_facility_intersection(f, i, current);
+                    long long freed_space = min(space_used[i], satellite_types[i].freeing_speed * 
+                        intersection.Length() / 1000);
+                    long long freed_time = freed_space * 1000 / satellite_types[i].freeing_speed;
+                    insert_segment(result.transmission_segments[f][i], Segment(intersection.l, intersection.l + freed_time));
                     space_used[i] -= freed_space;
                     satellite_data[i] += freed_space;
-                    total_data += freed_space;
+                    result.total_data += freed_space;
                 } else {
-                    int filled_space = min(satellite_types[i].space - space_used[i], 
-                        satellite_types[i].filling_speed * 
-                        get_satellite_intersection_length(i, current) / 1000);
-                    space_used[i] += filled_space;
+                    Segment intersection = get_satellite_intersection(i, current);
+                    long long filled_space = min(satellite_types[i].space - space_used[i], 
+                        satellite_types[i].filling_speed * intersection.Length() / 1000);
+                    long long filled_time = filled_space * 1000 / satellite_types[i].filling_speed;
+                    if (filled_space > 0) {
+                        space_used[i] += filled_space;
+                        insert_segment(result.shooting_segments[i], Segment(intersection.l, intersection.l + filled_time));
+                    }
                 }
             }
         }
-        return TransmissionResult { .segments = {}, .total_data = total_data };
+        return result;
     }
 
 private:
@@ -521,17 +565,14 @@ int main() {
         facility_names_map[name] = facilities++;
     }
 
-    TheoreticalMaxSolver solver;
-    TransmissionResult result = solver.GetTransmissionSchedule(facility_visibility, satellite_visibility, satellite_types);
-    cout << "Theoretical maximum: " << result.total_data << "\n";
-
+    TheoreticalMaxSolver max_solver;
+    TransmissionResult max_result = max_solver.GetTransmissionSchedule(facility_visibility, satellite_visibility, satellite_types);
     GreedySolver greedy_solver;
-    result = greedy_solver.GetTransmissionSchedule(facility_visibility, satellite_visibility, satellite_types);
-    cout << "Achieved maximum: " << result.total_data << "\n";
-    Writer::WriteSchedule(config["schedule_path"], facility_visibility, facility_names, satellite_names, satellite_types);
-
-    // TODO: Add visibiltiy segments to answer
-    // TODO: Add dumping photoshooting schedule 
+    TransmissionResult greedy_result = greedy_solver.GetTransmissionSchedule(facility_visibility, satellite_visibility, satellite_types);
+    cout << "Achieved maximum: " << max_result.total_data << "\n";
+    cout << "Theoretical maximum: " << greedy_result.total_data << "\n";
+    Writer::WriteSchedule(config["schedule_path"], greedy_result.transmission_segments, 
+        greedy_result.shooting_segments, facility_names, satellite_names, satellite_types);
 
     return 0;
 }
