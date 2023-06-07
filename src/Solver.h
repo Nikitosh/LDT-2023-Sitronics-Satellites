@@ -192,7 +192,7 @@ public:
         // In each segment we never change any assignments between facilities and satellites.
         const long long FRAGMENT_LENGTH = 1000;
         TransmissionResult result(facilities, satellites);
-        const double SPACE_USED_RATIO = 0.997;
+        const double SPACE_USED_RATIO = 0.69;
         for (long long iteration = 0, t = min_timestamp; 
             t < max_timestamp; iteration++, t += FRAGMENT_LENGTH) {
             if (t % 10000000 == 0) {
@@ -229,7 +229,7 @@ public:
                         // Never try to transmit any data from satellite 
                         // if the transmission segment length is too small.
                         if (get_facility_intersection(i, j, current).Length() 
-                            < (long long)(0.5 * FRAGMENT_LENGTH)) {
+                            < (long long)(1 * FRAGMENT_LENGTH)) {
                             continue;
                         }
                         // Create an edge between satellite and facility only 
@@ -251,7 +251,7 @@ public:
             // This allows to free up the most critical satellites.
             vector<double> cost(satellites);
             // How far in future we look to estimate potential data coming from photoshooting.
-            const int FUTURE_SEGMENTS = 600;
+            const int FUTURE_SEGMENTS = 630;
             for (int i = 0; i < satellites; i++) {
                 cost[i] = GetCost(space_used[i], 
                     get_satellite_intersection(i, 
@@ -275,7 +275,7 @@ public:
                     for (int i = 0; i < satellites; i++) {
                         if (paired[i] != -1 && space_used[i] < satellite_types[i].space
                             && get_satellite_intersection(i, current).Length() 
-                                > (long long)(FRAGMENT_LENGTH * 0.5)) {
+                                > (long long)(FRAGMENT_LENGTH * 1)) {
                             paired[i] = -1;
                             changed = true;
                             break;

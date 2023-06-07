@@ -87,9 +87,10 @@ int main() {
     // Optional part that allows to iteratively improve previously achieved results.
     // Note that improvement is very minor but could significantly increase the calculation time.
     // Use with caution. 
+    
     /*
     int iterations = (int) greedy_result.actions.size();
-    const int BATCHES = 1000;
+    const int BATCHES = 300;
     int batch_size = iterations / BATCHES;
     for (int i = 0; i < BATCHES; i++) {
         TransmissionResult optimized_result = greedy_solver.GetTransmissionSchedule(facility_visibility, 

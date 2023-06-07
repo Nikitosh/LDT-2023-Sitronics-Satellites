@@ -6,15 +6,15 @@
         {
             "name": "Kinosputnik",
             "name_regex": "KinoSat_110[1-5]\\d{2}",
-            "filling_speed": 4096,
-            "freeing_speed": 1024,
+            "filling_speed": 512,
+            "freeing_speed": 128,
             "space": 1048576
         },
         {
             "name": "Zorkiy",
             "name_regex": "KinoSat_11([1-2]\\d|0[6-9])\\d{2}",
-            "filling_speed": 4096,
-            "freeing_speed": 256,
+            "filling_speed": 512,
+            "freeing_speed": 32,
             "space": 524288
         }
     ]
