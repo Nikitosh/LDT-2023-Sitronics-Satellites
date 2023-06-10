@@ -1,7 +1,7 @@
 {
     "facility_path": "../data/Facility2Constellation/",
     "satellite_path": "../data/Russia2Constellation2/",
-    "schedule_path": "../schedule/",
+    "schedule_path": "../Results/",
     "satellites": [
         {
             "name": "Kinosputnik",

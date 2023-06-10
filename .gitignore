@@ -1,4 +1,6 @@
 data/schedule/
 solution
 solution.dSYM/
+verifier
+verifier.dSYM/
 *.DS_Store

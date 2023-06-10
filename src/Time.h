@@ -14,17 +14,17 @@ static bool IsLeap(int year) {
 }
 
 // Returns partial sums of amount of days in the years.
-vector<int> createPartialYearDays() {
+std::vector<int> createPartialYearDays() {
     const int MAX_YEAR = 10000;
-    vector<int> result(MAX_YEAR);
+    std::vector<int> result(MAX_YEAR);
     for (int i = 1; i < MAX_YEAR; i++) {
         result[i] = result[i - 1] + 365 + (IsLeap(i) ? 1 : 0);
     }
     return result;
 }
 
-vector<string> MONTHS = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-vector<int> DAYS = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+std::vector<std::string> MONTHS = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+std::vector<int> DAYS = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 }
 
@@ -38,12 +38,12 @@ struct Time {
     int second = 0;
     int millis = 0;
 
-    const static vector<int> PARTIAL_YEAR_DAYS;
+    const static std::vector<int> PARTIAL_YEAR_DAYS;
     
     // Parses timestamps in the format "1 Jun 2027 00:00:01.000".
-    static Time Parse(stringstream& stream) {
+    static Time Parse(std::stringstream& stream) {
         Time result;
-        string month;
+        std::string month;
         char c;
         stream >> result.day >> month >> result.year >> result.hour >> c 
             >> result.minute >> c >> result.second >> c >> result.millis;
@@ -96,11 +96,11 @@ struct Time {
     }
 
     // Return timestamp in the format "1 Jun 2027 00:00:01.000".
-    string ToString() const {
-        return to_string(day + 1) + " " + MONTHS[month] + " " + to_string(year) + " " 
+    std::string ToString() const {
+        return std::to_string(day + 1) + " " + MONTHS[month] + " " + std::to_string(year) + " " 
             + ToStringWithLength(hour, 2) + ":" + ToStringWithLength(minute, 2) + ":" 
             + ToStringWithLength(second, 2) + "." + ToStringWithLength(millis, 3); 
     }
 };
 
-const vector<int> Time::PARTIAL_YEAR_DAYS = createPartialYearDays();
+const std::vector<int> Time::PARTIAL_YEAR_DAYS = createPartialYearDays();

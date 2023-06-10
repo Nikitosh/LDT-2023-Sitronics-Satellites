@@ -1,4 +1,3 @@
-
 // Helper struct used to parse the input data.
 struct Reader {
     // Parses the given file in the following format:
@@ -8,20 +7,20 @@ struct Reader {
     //              ------    ------------------------    ------------------------    --------------
     //                   1     1 Jun 2027 00:00:01.000     1 Jun 2027 00:04:21.296           260.296
     //              ......
-    static pair<string, map<string, vector<Segment>>> ReadFile(
-        const string& filename) {
-        ifstream file(filename);
-        string line;
+    static std::pair<std::string, std::map<std::string, std::vector<Segment>>> ReadFile(
+        const std::string& filename) {
+        std::ifstream file(filename);
+        std::string line;
         bool parse = false;
-        string facility;
-        string satellite_name;
-        map<string, vector<Segment>> result;
+        std::string facility;
+        std::string satellite_name;
+        std::map<std::string, std::vector<Segment>> result;
         while (getline(file, line)) {
-            if (size_t ind = line.find("-To-"); ind != string::npos) {
+            if (size_t ind = line.find("-To-"); ind != std::string::npos) {
                 facility = line.substr(0, ind);
                 satellite_name = line.substr(ind + 4, line.size());
             }
-            if (line.find("Start Time (UTCG)") != string::npos) {
+            if (line.find("Start Time (UTCG)") != std::string::npos) {
                 parse = true;
             }
             if (StartsWith(line, "Min Duration")) {
@@ -31,7 +30,7 @@ struct Reader {
                 continue;
             }
             if (parse) {
-                stringstream stream(line);
+                std::stringstream stream(line);
                 int id;
                 stream >> id;
                 long long l = Time::Parse(stream).ToTimestamp();
@@ -43,9 +42,9 @@ struct Reader {
     }
 
     // Reads all facility-satellite visibility files.
-    static map<string, map<string, vector<Segment>>> ReadFacilityVisibility(
-        const string& directory) {
-        map<string, map<string, vector<Segment>>> result;
+    static std::map<std::string, std::map<std::string, std::vector<Segment>>> ReadFacilityVisibility(
+        const std::string& directory) {
+        std::map<std::string, std::map<std::string, std::vector<Segment>>> result;
         for (const auto& file : fs::directory_iterator(directory)) {
             if (!StartsWith(file.path().stem(), "Facility")) {
                 continue;
@@ -57,8 +56,8 @@ struct Reader {
     }
 
     // Reads all satellite visibility (for photoshooting) files.
-    static map<string, vector<Segment>> ReadSatelliteVisibility(const string& directory) {
-        map<string, vector<Segment>> result;
+    static std::map<std::string, std::vector<Segment>> ReadSatelliteVisibility(const std::string& directory) {
+        std::map<std::string, std::vector<Segment>> result;
         for (const auto& file : fs::directory_iterator(directory)) {
             if (!StartsWith(file.path().stem(), "Russia")) {
                 continue;
@@ -71,8 +70,8 @@ struct Reader {
     }
 
     // Reads config file.
-    static json ReadConfig(const string& filename) {
-        ifstream file(filename);
+    static json ReadConfig(const std::string& filename) {
+        std::ifstream file(filename);
         return json::parse(file);
     }
 };
